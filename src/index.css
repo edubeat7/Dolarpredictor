@@ -1,0 +1,248 @@
+/* Base styles - adjusted for compatibility with Predictor component */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Variables for the Predictor component */
+  --primary-color: #646cff;
+  --primary-light: #818cf8;
+  --primary-dark: #535bf2;
+  --secondary-color: #0ea5e9;
+  --accent-color: #f59e0b;
+  --success-color: #10b981;
+  --warning-color: #f97316;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+  --text-color: rgba(255, 255, 255, 0.87);
+  --bg-color: #242424;
+  --border-radius: 8px;
+  --border-color: #3a3a3a;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+  /* Modified to work better with our component */
+  justify-content: center;
+  align-items: flex-start; /* Changed from center to allow scrolling */
+  width: 100%;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+/* Default button styles - we'll override these for our component */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #e26464;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+  /* Override the text-align center only for direct children */
+  text-align: center;
+}
+
+/* The Predictor component needs left-aligned text in specific areas */
+#root .app-container {
+  text-align: left;
+}
+
+/* Adjustments for component-specific elements */
+#root .tabs button,
+#root .btn {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: var(--border-radius);
+}
+
+#root .tabs button {
+  background-color: transparent;
+  color: var(--text-color);
+  padding: 0.75rem 1.5rem;
+}
+
+#root .tabs button.active {
+  color: var(--primary-color);
+}
+
+#root .btn-secondary {
+  background-color: #f76f6f;
+  color: var(--text-color);
+}
+
+/* Chart container for dark mode */
+#root .chart-container {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+/* Panel styles for dark mode */
+#root .panel {
+  background-color: #1a1a1a;
+  box-shadow: var(--shadow);
+  border: 1px solid #3a3a3a;
+}
+
+#root .instruction-panel {
+  background-color: #2a2a2a;
+}
+
+/* Tables for dark mode */
+#root .data-table th {
+  background-color: #2a2a2a;
+  border-bottom: 2px solid #3a3a3a;
+}
+
+#root .data-table td {
+  border-bottom: 1px solid #3a3a3a;
+}
+
+#root .data-table .row-even {
+  background-color: #2a2a2a;
+}
+
+/* Forms for dark mode */
+#root .form-select,
+#root .form-input,
+#root .param-item input {
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  color: var(--text-color);
+}
+
+/* Light mode overrides */
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+    --text-color: #213547;
+    --bg-color: #ffffff;
+    --border-color: #e5e7eb;
+  }
+  
+  a:hover {
+    color: #747bff;
+  }
+  
+  button {
+    background-color: #f9f9f9;
+  }
+  
+  /* Reset panel and chart styles for light mode */
+  #root .panel {
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+  }
+  
+  #root .instruction-panel {
+    background-color: #f9fafb;
+  }
+  
+  #root .chart-container {
+    background-color: transparent;
+  }
+  
+  /* Tables for light mode */
+  #root .data-table th {
+    background-color: #f3f4f6;
+    border-bottom: 2px solid #d1d5db;
+  }
+  
+  #root .data-table td {
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  #root .data-table .row-even {
+    background-color: #f9fafb;
+  }
+  
+  /* Forms for light mode */
+  #root .form-select,
+  #root .form-input,
+  #root .param-item input {
+    background-color: white;
+    border: 1px solid #d1d5db;
+    color: #213547;
+  }
+  
+  /* Adjust tab buttons for light mode */
+  #root .tabs button {
+    color: #4b5563;
+  }
+}
+
+/* Fix for file drop area */
+.file-drop-area {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+@media (prefers-color-scheme: light) {
+  .file-drop-area {
+    background-color: var(--gray-50);
+  }
+}
+
+/* Loading indicator fixes */
+.loading-indicator .spinner {
+  color: currentColor;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  #root {
+    padding: 1rem;
+  }
+  
+  body {
+    align-items: flex-start;
+  }
+  
+  h1 {
+    font-size: 2.5em;
+  }
+}

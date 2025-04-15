@@ -1,0 +1,28 @@
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ARIMA Forecast - Python + React</title>
+    
+    <!-- PyScript necesita estos recursos -->
+    <script defer src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    
+    <!-- Añadir estilos de PyScript -->
+    <style>
+      /* Para ocultar mensajes de PyScript que aparecen por defecto */
+      .py-terminal {
+        display: none;
+      }
+      .py-error {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
