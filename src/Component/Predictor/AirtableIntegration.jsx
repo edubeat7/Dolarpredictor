@@ -11,10 +11,10 @@ const AirtableIntegration = ({ onDataLoaded, onError }) => {
   // Configuración fija para Airtable
   const API_KEY = import.meta.env.VITE_APP_AIRTABLE_API_KEY || '';
   const BASE_ID = import.meta.env.VITE_APP_AIRTABLE_BASE_ID || '';
-  const TABLE_NAME = 'Tabla1';
+  const TABLE_NAME = 'Captured Texts';
   const VIEW_NAME = 'Grid view';
-  const DATE_FIELD = 'Fecha';
-  const VALUE_FIELD = 'Variacion';
+  const DATE_FIELD = 'Date (GMT)';
+  const VALUE_FIELD = 'Dolar';
   
   // Función para cargar datos desde Airtable con mejor manejo de paginación
   const loadAirtableData = async () => {
