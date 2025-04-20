@@ -25,6 +25,7 @@ function App() {
   const [valueColumn, setValueColumn] = useState('');
   const [availableColumns, setAvailableColumns] = useState([]);
   const [dataSource, setDataSource] = useState('file'); // 'file' o 'airtable'
+  const [isFileLoaded, setIsFileLoaded] = useState(false); // Nuevo estado para control de carga
   const fileInputRef = useRef(null);
   const pyodideRef = useRef(null);
   
@@ -152,6 +153,7 @@ function App() {
       setFileName(selectedFile.name);
       setError(null);
       setSuccess(null);
+      setIsFileLoaded(false); // Resetear estado de carga cuando se selecciona nuevo archivo
     }
   };
 
@@ -171,6 +173,7 @@ function App() {
         setFileName(droppedFile.name);
         setError(null);
         setSuccess(null);
+        setIsFileLoaded(false); // Resetear estado de carga cuando se arrastra nuevo archivo
       } else {
         setError("Por favor seleccione un archivo Excel (.xlsx o .xls)");
       }
@@ -239,15 +242,10 @@ is_stationary = p_value <= 0.05
     }
   };
 
-  // Procesar archivo Excel
-  const processExcelFile = async () => {
+  // NUEVA FUNCIÓN: Cargar archivo Excel (sin procesar)
+  const loadExcelFile = async () => {
     if (!file) {
       setError("Por favor seleccione un archivo Excel");
-      return;
-    }
-
-    if (!pythonReady || !pyodideRef.current) {
-      setError("Python no está listo. Espere a que se inicialice o recargue la página.");
       return;
     }
 
@@ -257,10 +255,11 @@ is_stationary = p_value <= 0.05
     setProgress(10);
 
     try {
+      // Sólo leemos el archivo y verificamos que sea un Excel válido
       const fileData = await readFileAsArrayBuffer(file);
-      setProgress(20);
+      setProgress(50);
       
-      // Procesar con JavaScript primero
+      // Verificar que sea un archivo Excel válido
       const workbook = XLSX.read(fileData, { 
         type: 'array',
         cellDates: true,
@@ -268,17 +267,19 @@ is_stationary = p_value <= 0.05
         cellNF: true
       });
       
+      // Verificar que tenga al menos una hoja con datos
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       
-      setProgress(30);
-      
-      // Detectar las columnas disponibles en el archivo
       if (!jsonData.length) {
         throw new Error("El archivo Excel no contiene datos");
       }
       
-      // Obtener todas las columnas del primer objeto
+      // Si llegamos hasta aquí, el archivo es válido
+      setIsFileLoaded(true);
+      setSuccess(`Archivo "${fileName}" cargado correctamente. Ahora puede procesar los datos.`);
+      
+      // Obtener todas las columnas del primer objeto (solo para mostrarlas)
       const firstRow = jsonData[0];
       const columns = Object.keys(firstRow);
       setAvailableColumns(columns);
@@ -286,11 +287,10 @@ is_stationary = p_value <= 0.05
       // Verificar columnas requeridas - necesitamos al menos una columna de fecha
       const dateColumn = columns.find(col => col.toLowerCase().includes('fecha'));
       if (!dateColumn) {
-        throw new Error("El archivo Excel debe contener al menos una columna de fecha");
+        setError("Advertencia: El archivo debe contener al menos una columna de fecha");
       }
       
-      // Buscar una columna que podría contener valores (no porcentajes)
-      // Primero intentamos encontrar la columna "Valor" o similar
+      // Buscar una columna que podría contener valores
       let possibleValueColumns = columns.filter(col => 
         !col.toLowerCase().includes('fecha') && 
         !col.toLowerCase().includes('variacion') && 
@@ -301,7 +301,7 @@ is_stationary = p_value <= 0.05
       if (possibleValueColumns.length > 0) {
         setValueColumn(possibleValueColumns[0]);
       } else {
-        // Si no hay columnas de valor, usaremos la de variación y mostraremos un mensaje
+        // Si no hay columnas de valor claras, usamos la de variación si existe
         const variationCol = columns.find(col => 
           col.toLowerCase().includes('variacion') || 
           col.toLowerCase().includes('variación')
@@ -315,11 +315,59 @@ is_stationary = p_value <= 0.05
           const nonDateCol = columns.find(col => !col.toLowerCase().includes('fecha'));
           if (nonDateCol) {
             setValueColumn(nonDateCol);
-          } else {
-            throw new Error("No se pudo encontrar una columna adecuada para el valor o variación.");
           }
         }
       }
+      
+    } catch (err) {
+      console.error("Error al cargar el archivo:", err);
+      setError(`Error al cargar el archivo: ${err.message}`);
+      setIsFileLoaded(false);
+    } finally {
+      setLoading(false);
+      setProgress(100);
+      setTimeout(() => setProgress(0), 500); // Resetear la barra de progreso después de un momento
+    }
+  };
+
+  // FUNCIÓN MODIFICADA: Procesar archivo Excel ya cargado
+  const processExcelFile = async () => {
+    if (!isFileLoaded || !file) {
+      setError("Primero debe cargar un archivo Excel");
+      return;
+    }
+
+    if (!pythonReady || !pyodideRef.current) {
+      setError("Python no está listo. Espere a que se inicialice o recargue la página.");
+      return;
+    }
+
+    if (!valueColumn) {
+      setError("Debe seleccionar una columna de valor");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    setProgress(10);
+
+    try {
+      const fileData = await readFileAsArrayBuffer(file);
+      setProgress(20);
+      
+      // Procesar con JavaScript
+      const workbook = XLSX.read(fileData, { 
+        type: 'array',
+        cellDates: true,
+        dateNF: 'dd/mm/yyyy',
+        cellNF: true
+      });
+      
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      setProgress(30);
       
       // Normalizar nombres de columnas
       const normalizedData = jsonData.map(row => {
@@ -348,13 +396,13 @@ is_stationary = p_value <= 0.05
       }
       
       setData(processedData);
-      setProgress(40);
+      setProgress(60);
       
       // Preparar datos para Python
       await prepareDataForPython(processedData);
-      setProgress(60);
+      setProgress(80);
       
-      setSuccess(`Archivo "${fileName}" procesado con éxito. Se han cargado ${processedData.length} registros.`);
+      setSuccess(`Datos procesados con éxito. Se han cargado ${processedData.length} registros.`);
       setActiveTab('visualizacion');
       
     } catch (err) {
@@ -363,6 +411,7 @@ is_stationary = p_value <= 0.05
     } finally {
       setLoading(false);
       setProgress(100);
+      setTimeout(() => setProgress(0), 500); // Resetear la barra de progreso después de un momento
     }
   };
 
@@ -645,6 +694,7 @@ json.dumps(result)
     } finally {
       setIsAnalyzing(false);
       setProgress(100);
+      setTimeout(() => setProgress(0), 500); // Resetear progreso después de un momento
     }
   };
 
@@ -695,7 +745,6 @@ json.dumps(result)
         return new Date();
       }
     };
-    
     const processedData = [];
     
     for (let i = 0; i < jsonData.length; i++) {
@@ -762,6 +811,7 @@ json.dumps(result)
     setActiveTab('datos');
     setValueColumn('');
     setAvailableColumns([]);
+    setIsFileLoaded(false); // Resetear estado de archivo cargado
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -885,7 +935,7 @@ json.dumps(result)
           </div>
           
           {dataSource === 'file' ? (
-            /* Panel de carga de archivo */
+            /* Panel de carga de archivo MODIFICADO */
             <div className="panel">
               <h2>Cargar archivo de datos</h2>
               
@@ -934,12 +984,31 @@ json.dumps(result)
                   Reiniciar
                 </button>
                 
+                {/* MODIFICACIÓN: Separar en dos botones */}
+                {/* Primer botón: Cargar Archivo */}
+                <button 
+                  onClick={loadExcelFile} 
+                  disabled={!file || loading}
+                  className={`btn btn-primary ${(!file || loading) ? 'disabled' : ''}`}
+                >
+                  {loading && !isFileLoaded ? (
+                    <div className="loading-indicator">
+                      <svg className="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Cargando...
+                    </div>
+                  ) : 'Cargar Archivo'}
+                </button>
+                
+                {/* Segundo botón: Procesar Datos */}
                 <button 
                   onClick={processExcelFile} 
-                  disabled={!file || loading || !pythonReady}
-                  className={`btn btn-primary ${(!file || loading || !pythonReady) ? 'disabled' : ''}`}
+                  disabled={!isFileLoaded || loading || !pythonReady}
+                  className={`btn btn-success ${(!isFileLoaded || loading || !pythonReady) ? 'disabled' : ''}`}
                 >
-                  {loading ? (
+                  {loading && isFileLoaded ? (
                     <div className="loading-indicator">
                       <svg className="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -947,14 +1016,14 @@ json.dumps(result)
                       </svg>
                       Procesando...
                     </div>
-                  ) : 'Cargar y Procesar Datos'}
+                  ) : 'Procesar Datos'}
                 </button>
               </div>
               
               {loading && (
                 <div className="progress-container">
                   <div className="progress-label">
-                    <span>Procesando</span>
+                    <span>{isFileLoaded ? 'Procesando' : 'Cargando'}</span>
                     <span>{progress}%</span>
                   </div>
                   <div className="progress-bar">
@@ -1011,7 +1080,7 @@ json.dumps(result)
               </div>
               <div className="instruction-item">
                 <div className="instruction-number">3</div>
-                <p>Configura los parámetros ARIMA (p, d, q) según corresponda. La predicción se realiza usando la biblioteca statsmodels de Python.</p>
+                <p>Configura los parámetros ARIMA (p, d, q) según corresponda (Opcional). La predicción se realiza usando la biblioteca statsmodels de Python.</p>
               </div>
               <div className="instruction-item">
                 <div className="instruction-number">4</div>
@@ -1322,7 +1391,7 @@ json.dumps(result)
         <div className="container">
           <div className="footer-content">
             <p>Aplicación de Análisis ARIMA y Predicción de Series Temporales con PyScript</p>
-            <p>Desarrollado por David Murati con React + Python (statsmodels)</p>
+            <p>Desarrollado por David Murati Gil con React + Python (statsmodels)</p>
           </div>
         </div>
       </footer>
