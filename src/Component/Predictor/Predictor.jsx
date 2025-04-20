@@ -908,7 +908,7 @@ json.dumps(result)
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                   </svg>
                   <p className="upload-title">
-                    Haz clic o arrastra un archivo
+                    Haz clic o arrastra un archivo. Luego selecciona el valor de la columna
                   </p>
                   <p className="upload-subtitle">
                     Acepta archivos Excel (.xlsx, .xls)
@@ -1322,7 +1322,7 @@ json.dumps(result)
         <div className="container">
           <div className="footer-content">
             <p>Aplicación de Análisis ARIMA y Predicción de Series Temporales con PyScript</p>
-            <p>Desarrollado con React + Python (statsmodels)</p>
+            <p>Desarrollado por David Murati con React + Python (statsmodels)</p>
           </div>
         </div>
       </footer>
