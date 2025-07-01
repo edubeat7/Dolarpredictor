@@ -1391,7 +1391,7 @@ json.dumps(result)
         <div className="container">
           <div className="footer-content">
             <p>Aplicación de Análisis ARIMA y Predicción de Series Temporales con PyScript</p>
-            <p>Desarrollado por David Murati Gil con React + Python (statsmodels)</p>
+            <p>Desarrollado con React + Python (statsmodels)</p>
           </div>
         </div>
       </footer>
